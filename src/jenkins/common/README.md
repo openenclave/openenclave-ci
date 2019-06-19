@@ -1,6 +1,6 @@
 Open Enclave CI
 ================
-This library contains common Jenkins pipeline functions to be used by https://github.com/microsoft/openenclave
+This library contains common Jenkins pipeline functions to be used by https://github.com/openenclave/openenclave
 
 Usage
 ================
