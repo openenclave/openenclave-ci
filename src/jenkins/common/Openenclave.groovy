@@ -18,7 +18,7 @@ String dockerImage(String tag, String dockerfile = ".jenkins/Dockerfile", String
 
 def ContainerRun(String imageName, String compiler, String task, String runArgs="") {
     docker.withRegistry("https://oejenkinscidockerregistry.azurecr.io", "oejenkinscidockerregistry") {
-        def image = docker.image("${imageName}:latest")
+        def image = docker.image(imageName)
         image.pull()
         image.inside(runArgs) {
             dir("${WORKSPACE}/build") {
@@ -79,12 +79,12 @@ def Run(String compiler, String task) {
     }
 }
 
-def deleteRG(List resourceGroups) {
+def deleteRG(List resourceGroups, String imageName = "oetools-deploy:latest") {
     stage("Delete ${resourceGroups.toString()} resource groups") {
         resourceGroups.each { rg ->
             withEnv(["RESOURCE_GROUP=${rg}"]) {
                 dir("${WORKSPACE}/.jenkins/provision") {
-                    azureEnvironment("./cleanup.sh")
+                    azureEnvironment("./cleanup.sh", imageName)
                 }
             }
         }
