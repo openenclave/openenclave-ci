@@ -91,4 +91,19 @@ def deleteRG(List resourceGroups, String imageName = "oetools-deploy:latest") {
     }
 }
 
+def emailJobStatus(String status) {
+    emailext (
+      to: '$DEFAULT_RECIPIENTS',      
+      subject: "[Jenkins Job ${status}] ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
+      body: """            
+            <p>               
+            For additional logging details for this job please check: 
+            <a href="${env.BUILD_URL}">${env.JOB_NAME} - ${env.BUILD_NUMBER}</a>
+            </p>
+            """,
+      recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
+      mimeType: 'text/html'     
+    )
+}
+
 return this
