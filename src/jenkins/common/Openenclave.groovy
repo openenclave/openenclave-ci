@@ -101,7 +101,12 @@ def emailJobStatus(String status) {
             <a href="${env.BUILD_URL}">${env.JOB_NAME} - ${env.BUILD_NUMBER}</a>
             </p>
             """,
-      recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']],
+      recipientProviders: [[$class: 'DevelopersRecipientProvider'],
+      [$class: 'RequesterRecipientProvider'],
+      [$class: 'CulpritsRecipientProvider'],
+      [$class: 'UpstreamComitterRecipientProvider'],
+      [$class: 'FirstFailingBuildSuspectsRecipientProvider'],
+      [$class: 'FailingTestSuspectsRecipientProvider']],
       mimeType: 'text/html'     
     )
 }
