@@ -2,8 +2,6 @@ Open Enclave CI
 ================
 This library contains common Jenkins pipeline functions to be used by https://github.com/openenclave/openenclave
 
-This project follows a [Code of Conduct](docs/CodeOfConduct.md) adapted from the [Contributor Covenant v1.4](https://www.contributor-covenant.org).
-
 Usage
 ================
 - In your Jenkins instance define a [Global Pipeline Library](https://jenkins.io/doc/book/pipeline/shared-libraries/) that points to this repo (for the purpose of this doc we'll name it 'OpenEnclaveCommon')
