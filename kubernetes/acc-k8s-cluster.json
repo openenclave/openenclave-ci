@@ -1,0 +1,87 @@
+{
+  "apiVersion": "vlabs",
+  "properties": {
+    "orchestratorProfile": {
+      "orchestratorType": "Kubernetes",
+      "kubernetesConfig": {
+        "addons": [
+          {
+            "name": "tiller",
+            "enabled" : true
+          },
+          {
+            "name": "cluster-autoscaler",
+            "enabled": true,
+            "pools": [
+              {
+                "name": "agentsbionic",
+                "config": {
+                  "min-nodes": "0",
+                  "max-nodes": "5"
+                }
+              },
+              {
+                "name": "agentsxenial",
+                "config": {
+                  "min-nodes": "0",
+                  "max-nodes": "5"
+                }
+              }
+            ],
+            "config": {
+              "scan-interval": "1m"
+            }
+          }
+        ]
+      }
+    },
+    "masterProfile": {
+      "count": 1,
+      "vmSize": "Standard_D2s_v3",
+      "vnetSubnetId": "${VNET_SUBNET_ID}",
+      "dnsPrefix": "${DNS_PREFIX}",
+      "firstConsecutiveStaticIP": "${FIRST_CONSECUTIVE_IP}"
+    },
+    "agentPoolProfiles": [
+      {
+        "name": "agentsbionic",
+        "count": 2,
+        "availabilityProfile": "VirtualMachineScaleSets",
+        "distro": "aks-ubuntu-18.04",
+        "vmSize": "${ACC_VM_SIZE}",
+        "vnetSubnetId": "${VNET_SUBNET_ID}",
+        "storageProfile": "ManagedDisks"
+      },
+      {
+        "name": "agentsxenial",
+        "count": 2,
+        "availabilityProfile": "VirtualMachineScaleSets",
+        "distro": "acc-16.04",
+        "vmSize": "${ACC_VM_SIZE}",
+        "vnetSubnetId": "${VNET_SUBNET_ID}",
+        "storageProfile": "ManagedDisks"
+      }
+    ],
+    "linuxProfile": {
+      "adminUsername": "azureuser",
+      "ssh": {
+        "publicKeys": [
+          {
+            "keyData": "${SSH_PUBLIC_KEY}"
+          }
+        ]
+      }
+    },
+    "extensionProfiles": [
+      {
+        "name": "prometheus-grafana-k8s",
+        "version": "v1"
+      }
+    ],
+    "servicePrincipalProfile": {
+      "clientId": "${SERVICE_PRINCIPAL_ID}",
+      "secret": "${SERVICE_PRINCIPAL_PASSWORD}"
+
+    }
+  }
+}
