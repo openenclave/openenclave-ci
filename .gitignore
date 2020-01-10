@@ -1,0 +1,6 @@
+.terraform
+*.tfstate
+aks-engine-template.json
+_output
+translations
+.env
