@@ -60,22 +60,36 @@ def runTask(String task) {
     }
 }
 
-def Run(String compiler, String task) {
-    if (compiler == "cross") {
-        // In this case, the compiler is set by the CMake toolchain file. As
-        // such, it is not necessary to specify anything in the environment.
-        runTask(task);
-    } else {
-        def c_compiler = "clang-7"
-        def cpp_compiler = "clang++-7"
-        if (compiler == "gcc") {
+def Run(String compiler, String task, String compiler_version = "") {
+    def c_compiler
+    def cpp_compiler
+    switch(compiler) {
+        case "cross":
+            // In this case, the compiler is set by the CMake toolchain file. As
+            // such, it is not necessary to specify anything in the environment.
+            runTask(task)
+            return
+        case "clang":
+            c_compiler = "clang"
+            cpp_compiler = "clang++"
+            break
+        case "gcc":
             c_compiler = "gcc"
             cpp_compiler = "g++"
-        }
-
-        withEnv(["CC=${c_compiler}","CXX=${cpp_compiler}"]) {
-            runTask(task);
-        }
+            break
+        default:
+            // This is needed for backwards compatibility with the old
+            // implementation of the method.
+            c_compiler = "clang"
+            cpp_compiler = "clang++"
+            compiler_version = "7"
+    }
+    if (compiler_version) {
+        c_compiler += "-${compiler_version}"
+        cpp_compiler += "-${compiler_version}"
+    }
+    withEnv(["CC=${c_compiler}","CXX=${cpp_compiler}"]) {
+        runTask(task);
     }
 }
 
