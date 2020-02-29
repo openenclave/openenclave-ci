@@ -1,0 +1,63 @@
+diff --git a/core/arch/arm/include/mm/pgt_cache.h b/core/arch/arm/include/mm/pgt_cache.h
+index 99b9058..bbb41eb 100644
+--- a/core/arch/arm/include/mm/pgt_cache.h
++++ b/core/arch/arm/include/mm/pgt_cache.h
+@@ -38,9 +38,9 @@ struct pgt {
+  * Reserve 2 page tables per thread, but at least 4 page tables in total
+  */
+ #if CFG_NUM_THREADS < 2
+-#define PGT_CACHE_SIZE	4
++#define PGT_CACHE_SIZE	8
+ #else
+-#define PGT_CACHE_SIZE	ROUNDUP(CFG_NUM_THREADS * 2, PGT_NUM_PGT_PER_PAGE)
++#define PGT_CACHE_SIZE	ROUNDUP(CFG_NUM_THREADS * 3, PGT_NUM_PGT_PER_PAGE)
+ #endif
+ 
+ SLIST_HEAD(pgt_cache, pgt);
+diff --git a/core/arch/arm/mm/core_mmu_lpae.c b/core/arch/arm/mm/core_mmu_lpae.c
+index 62cce13..51c7010 100644
+--- a/core/arch/arm/mm/core_mmu_lpae.c
++++ b/core/arch/arm/mm/core_mmu_lpae.c
+@@ -175,9 +175,9 @@
+ 
+ #ifndef MAX_XLAT_TABLES
+ #ifndef CFG_VIRTUALIZATION
+-#define MAX_XLAT_TABLES		5
++#define MAX_XLAT_TABLES		18
+ #else  /* CFG_VIRTUALIZATION*/
+-#define MAX_XLAT_TABLES		8
++#define MAX_XLAT_TABLES		18
+ #endif
+ #endif
+ 
+diff --git a/core/arch/arm/plat-vexpress/conf.mk b/core/arch/arm/plat-vexpress/conf.mk
+index a3cacc2..fb2d122 100644
+--- a/core/arch/arm/plat-vexpress/conf.mk
++++ b/core/arch/arm/plat-vexpress/conf.mk
+@@ -96,11 +96,11 @@ ifeq ($(PLATFORM_FLAVOR),qemu_armv8a)
+ CFG_TEE_CORE_NB_CORE = 4
+ # [0e00.0000 0e0f.ffff] is reserved to early boot
+ CFG_TZDRAM_START ?= 0x0e100000
+-CFG_TZDRAM_SIZE  ?= 0x00f00000
++CFG_TZDRAM_SIZE  ?= 0x1e00000
+ # SHM chosen arbitrary, in a way that it does not interfere
+ # with initial location of linux kernel, dtb and initrd.
+ CFG_SHMEM_START ?= 0x42000000
+-CFG_SHMEM_SIZE  ?= 0x00200000
++CFG_SHMEM_SIZE  ?= 0xA00000
+ # When Secure Data Path is enable, last MByte of TZDRAM is SDP test memory.
+ CFG_TEE_SDP_MEM_SIZE ?= 0x00400000
+ $(call force,CFG_DT,y)
+diff --git a/core/arch/arm/plat-vexpress/platform_config.h b/core/arch/arm/plat-vexpress/platform_config.h
+index 8821a1f..0468386 100644
+--- a/core/arch/arm/plat-vexpress/platform_config.h
++++ b/core/arch/arm/plat-vexpress/platform_config.h
+@@ -88,7 +88,7 @@
+ #define DRAM1_SIZE		0x180000000UL
+ 
+ #define TZCDRAM_BASE		0xff000000
+-#define TZCDRAM_SIZE		0x01000000
++#define TZCDRAM_SIZE		0x02000000
+ 
+ #define GICC_OFFSET		0x0
+ #define GICD_OFFSET		0x3000000

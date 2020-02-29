@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Copyright (c) Open Enclave SDK contributors.
+# Licensed under the MIT License.
+
+# This script creates a tarball that contains a QEMU-based emulator for an ARM64
+# board with ARM TrustZone support. Additionally, the tarball contains a Linux
+# kernel, a root filesystem, and firmware images with ATF, OP-TEE, and UEFI. The
+# resulting contents are included in the SDK's full Docker container images to
+# run the SDK's test suite for Open Enclave on OP-TEE on ARM TrustZone.
+
+# NOTE: The resulting QEMU binary must run on Ubuntu 16.04 and on Ubuntu 18.04.
+#       Thus, this script must be run on Ubuntu 16.04 to ensure that it
+#       generates binaries compatible with both versions.
+
+sudo apt update && sudo apt install -y android-tools-adb                       \
+    android-tools-fastboot autoconf automake bc bison build-essential ccache   \
+    cgdb cscope curl device-tree-compiler expect flex ftp-upload gdb-multiarch \
+    gdisk iasl libattr1-dev libc6 libcap-dev libfdt-dev libftdi-dev            \
+    libglib2.0-dev libhidapi-dev libncurses5-dev libpixman-1-dev libssl-dev    \
+    libstdc++6 libtool libz1 make mtools netcat python-crypto                  \
+    python-pyelftools python-serial python-wand python3-pyelftools repo unzip  \
+    uuid-dev xdg-utils xterm xz-utils zlib1g-dev
+
+ROOT_DIR=$PWD
+
+mkdir arm64-tz-emulator
+pushd arm64-tz-emulator
+
+repo init -u https://github.com/ms-iot/optee_manifest -m oe_qemu_v8.xml -b oe-3.6.0
+repo sync -j$(nproc)
+
+pushd arm-trusted-firmware
+git apply $ROOT_DIR/patches/arm-trusted-firmware.patch
+popd
+
+pushd build
+git apply $ROOT_DIR/patches/build.patch
+cp $ROOT_DIR/patches/users ./br-ext/configs/
+popd
+
+pushd optee_os
+git apply $ROOT_DIR/patches/optee_os.patch
+popd
+
+pushd qemu
+git apply $ROOT_DIR/patches/qemu.patch
+popd
+
+pushd build
+make toolchains -j2
+make run -j$(nproc)
+popd
+
+mkdir pack
+
+cp out/bin/* pack/
+cp qemu/aarch64-softmmu/qemu-system-aarch64 pack/
+cp qemu/pc-bios/efi-virtio.rom pack/
+
+pushd pack
+GZIP=-9 tar cvzf ../OE-CI-emulator-armtz-aarch64.tar.gz *
+popd
