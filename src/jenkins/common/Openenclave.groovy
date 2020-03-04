@@ -120,4 +120,36 @@ def emailJobStatus(String status) {
     )
 }
 
+/**
+ * Compile open-enclave on Windows platform, generate NuGet package out of it, 
+ * install the generated NuGet package, and run samples tests against the installation.
+ */
+def WinCompilePackageTest(String dirName, String buildType, String hasQuoteProvider, Integer timeoutSeconds) {
+    cleanWs()
+    checkout scm
+    dir(dirName) {
+        bat """
+            vcvars64.bat x64 && \
+            cmake.exe ${WORKSPACE} -G Ninja -DCMAKE_BUILD_TYPE=${buildType} -DBUILD_ENCLAVES=ON -DHAS_QUOTE_PROVIDER=${hasQuoteProvider} -DNUGET_PACKAGE_PATH=C:/oe_prereqs -DCPACK_GENERATOR=NuGet -Wdev && \
+            ninja.exe && \
+            ctest.exe -V -C ${buildType} --timeout ${timeoutSeconds} && \
+            cpack.exe -D CPACK_NUGET_COMPONENT_INSTALL=ON -DCPACK_COMPONENTS_ALL=OEHOSTVERIFY && \
+            cpack.exe && \
+            (if exist C:\\oe rmdir /s/q C:\\oe) && \
+            nuget.exe install open-enclave -Source %cd% -OutputDirectory C:\\oe -ExcludeVersion && \
+            set OpenEnclave_DIR=C:\\oe\\open-enclave\\openenclave\\lib\\openenclave\\cmake && \
+            cd C:\\oe\\open-enclave\\openenclave\\share\\openenclave\\samples && \
+            setlocal enabledelayedexpansion && \
+            for /d %%i in (*) do (
+                cd C:\\oe\\open-enclave\\openenclave\\share\\openenclave\\samples\\"%%i"
+                mkdir build
+                cd build
+                cmake .. -G Ninja -DNUGET_PACKAGE_PATH=C:\\oe_prereqs || exit /b %errorlevel%
+                ninja || exit /b %errorlevel%
+                ninja run || exit /b %errorlevel%
+            )
+            """
+    }
+}
+
 return this
