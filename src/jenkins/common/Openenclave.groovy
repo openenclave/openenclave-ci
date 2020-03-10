@@ -124,7 +124,7 @@ def emailJobStatus(String status) {
  * Compile open-enclave on Windows platform, generate NuGet package out of it, 
  * install the generated NuGet package, and run samples tests against the installation.
  */
-def WinCompilePackageTest(String dirName, String buildType, String hasQuoteProvider, Integer timeoutSeconds) {
+def WinCompilePackageTest(String dirName, String buildType, String hasQuoteProvider, Integer timeoutSeconds, String lvi_mitigation = 'None') {
     cleanWs()
     checkout scm
     dir(dirName) {
@@ -144,7 +144,7 @@ def WinCompilePackageTest(String dirName, String buildType, String hasQuoteProvi
                 cd C:\\oe\\open-enclave\\openenclave\\share\\openenclave\\samples\\"%%i"
                 mkdir build
                 cd build
-                cmake .. -G Ninja -DNUGET_PACKAGE_PATH=C:\\oe_prereqs || exit /b %errorlevel%
+                cmake .. -G Ninja -DNUGET_PACKAGE_PATH=C:\\oe_prereqs -DLVI_MITIGATION=${lvi_mitigation} || exit /b %errorlevel%
                 ninja || exit /b %errorlevel%
                 ninja run || exit /b %errorlevel%
             )
