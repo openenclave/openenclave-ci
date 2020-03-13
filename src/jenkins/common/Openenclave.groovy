@@ -152,4 +152,22 @@ def WinCompilePackageTest(String dirName, String buildType, String hasQuoteProvi
     }
 }
 
+def exec_with_retry(int max_retries = 10, int retry_timeout = 30, Closure body) {
+    int retry_count = 1
+    while (retry_count <= max_retries) {
+        try {
+            body.call()
+            break
+        } catch (Exception e) {
+            if (retry_count == max_retries) {
+                throw e
+            }
+            println("Command failed. Retry count ${retry_count}/${max_retries}. Retrying in ${retry_timeout} seconds")
+            sleep(retry_timeout)
+            retry_count += 1
+            continue
+        }
+    }
+}
+
 return this
