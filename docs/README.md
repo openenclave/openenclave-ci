@@ -6,9 +6,10 @@ Usage
 ================
 - In your Jenkins instance define a [Global Pipeline Library](https://jenkins.io/doc/book/pipeline/shared-libraries/) that points to this repo (for the purpose of this doc we'll name it 'OpenEnclaveCommon')
 - In your pipeline script simply import the library
+- OECI_LIB_VERSION can be any branch or PR from openenclave-ci repository (master, PR-XX)
 ```groovy
-@Library("OpenEnclaveCommon") _
-oe = new jenkins.common.Openenclave()
+OECI_LIB_VERSION = env.OECI_LIB_VERSION ?: "master"
+oe = library("OpenEnclaveCommon@${OECI_LIB_VERSION}").jenkins.common.Openenclave.new()
 ```
 - Use the functions
 ```groovy
