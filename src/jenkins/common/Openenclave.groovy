@@ -154,6 +154,12 @@ def WinCompilePackageTest(String dirName, String buildType, String hasQuoteProvi
     }
 }
 
+def checkoutSCM(int max_retries = 10, int retry_timeout = 30) {
+    exec_with_retry(10,300){
+        checkout scm
+    }
+}
+
 def exec_with_retry(int max_retries = 10, int retry_timeout = 30, Closure body) {
     int retry_count = 1
     while (retry_count <= max_retries) {
