@@ -17,12 +17,14 @@ String dockerImage(String tag, String dockerfile = ".jenkins/Dockerfile", String
 }
 
 def ContainerRun(String imageName, String compiler, String task, String runArgs="") {
-    docker.withRegistry("https://oejenkinscidockerregistry.azurecr.io", "oejenkinscidockerregistry") {
-        def image = docker.image(imageName)
-        image.pull()
-        image.inside(runArgs) {
-            dir("${WORKSPACE}/build") {
-                Run(compiler, task)
+    exec_with_retry(10,300){
+        docker.withRegistry("https://oejenkinscidockerregistry.azurecr.io", "oejenkinscidockerregistry") {
+            def image = docker.image(imageName)
+            image.pull()
+            image.inside(runArgs) {
+                dir("${WORKSPACE}/build") {
+                    Run(compiler, task)
+                }
             }
         }
     }
