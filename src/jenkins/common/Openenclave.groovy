@@ -172,13 +172,4 @@ def exec_with_retry(int max_retries = 10, int retry_timeout = 30, Closure body) 
     }
 }
 
-/**
- * Retry in case of github server 'flickers'.
- */
-def checkout_scm_with_retry(){
-    oe.exec_with_retry(5, 30) {
-        checkout scm
-    }
-}
-
 return this
