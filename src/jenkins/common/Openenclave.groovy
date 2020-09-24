@@ -71,9 +71,10 @@ def Run(String compiler, String task, String compiler_version = "") {
             // such, it is not necessary to specify anything in the environment.
             runTask(task)
             return
-        case "clang":
+        case "clang-7":
             c_compiler = "clang"
             cpp_compiler = "clang++"
+            compiler_version = "7"
             break
         case "gcc":
             c_compiler = "gcc"
@@ -84,7 +85,7 @@ def Run(String compiler, String task, String compiler_version = "") {
             // implementation of the method.
             c_compiler = "clang"
             cpp_compiler = "clang++"
-            compiler_version = "7"
+            compiler_version = "8"
     }
     if (compiler_version) {
         c_compiler += "-${compiler_version}"
