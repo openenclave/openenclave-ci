@@ -1,0 +1,9 @@
+approvers:
+  - BRMcLaren
+  - rs--
+reviewers:
+  - BRMcLaren
+  - rs--
+  - oe-ci-robot
+labels:
+  - sig/ci
