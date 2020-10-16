@@ -138,7 +138,7 @@ def WinCompilePackageTest(String dirName, String buildType, String hasQuoteProvi
             cpack.exe -D CPACK_NUGET_COMPONENT_INSTALL=ON -DCPACK_COMPONENTS_ALL=OEHOSTVERIFY && \
             cpack.exe && \
             (if exist C:\\oe rmdir /s/q C:\\oe) && \
-            nuget.exe install open-enclave -Source %cd% -OutputDirectory C:\\oe -ExcludeVersion && \
+            nuget.exe install open-enclave -Source %cd% -prerelease -OutputDirectory C:\\oe -ExcludeVersion && \
             set CMAKE_PREFIX_PATH=C:\\oe\\open-enclave\\openenclave\\lib\\openenclave\\cmake && \
             cd C:\\oe\\open-enclave\\openenclave\\share\\openenclave\\samples && \
             setlocal enabledelayedexpansion && \
