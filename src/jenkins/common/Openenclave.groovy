@@ -37,7 +37,8 @@ def azureEnvironment(String task, String imageName = "oetools-deploy:latest") {
                      string(credentialsId: 'OSCTLabSubID', variable: 'SUBSCRIPTION_ID'),
                      string(credentialsId: 'TenantID', variable: 'TENANT_ID')]) {
         docker.withRegistry("https://oejenkinscidockerregistry.azurecr.io", "oejenkinscidockerregistry") {
-            def image = docker.image(imageName)
+            // This is temporarily hardcoded to fix a bug enountered with az cli with newer deployments of oedeploy.
+            def image = docker.image("2020.12.29-3b6f41368")
             image.pull()
             image.inside {
                 sh """#!/usr/bin/env bash
