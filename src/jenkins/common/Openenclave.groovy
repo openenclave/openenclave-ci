@@ -23,7 +23,15 @@ def ContainerRun(String imageName, String compiler, String task, String runArgs=
             image.pull()
             image.inside(runArgs) {
                 dir("${WORKSPACE}/build") {
-                    Run(compiler, task)
+                    String[] compilerDetails
+                    int compilerIndex = 0, versionIndex = 1
+
+                    compilerDetails = compiler.split("-")
+                    if (compilerDetails[compilerIndex] == "clang") {
+                      Run(compilerDetails[compilerIndex], task, compilerDetails[versionIndex])
+                    } else {
+                      Run(compiler, task)
+                    }
                 }
             }
         }
@@ -71,10 +79,20 @@ def Run(String compiler, String task, String compiler_version = "") {
             // such, it is not necessary to specify anything in the environment.
             runTask(task)
             return
+        case "clang":
+            c_compiler = "clang"
+            cpp_compiler = "clang++"
+            compiler_version = compiler_version
+            break
         case "clang-7":
             c_compiler = "clang"
             cpp_compiler = "clang++"
             compiler_version = "7"
+            break
+        case "clang-8":
+            c_compiler = "clang"
+            cpp_compiler = "clang++"
+            compiler_version = "8"
             break
         case "gcc":
             c_compiler = "gcc"
@@ -85,7 +103,7 @@ def Run(String compiler, String task, String compiler_version = "") {
             // implementation of the method.
             c_compiler = "clang"
             cpp_compiler = "clang++"
-            compiler_version = "8"
+            compiler_version = "10"
     }
     if (compiler_version) {
         c_compiler += "-${compiler_version}"
