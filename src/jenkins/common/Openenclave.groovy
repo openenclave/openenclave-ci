@@ -16,14 +16,14 @@ String dockerImage(String tag, String dockerfile = ".jenkins/Dockerfile", String
     return docker.build(tag, "${buildArgs} -f ${dockerfile} .")
 }
 
-def ContainerRun(String imageName, String compiler, String task, String runArgs="") {
+def ContainerRun(String imageName, String compiler, String task, String runArgs = "", String os = "ubuntu") {
     exec_with_retry(10,300){
         docker.withRegistry("https://oejenkinscidockerregistry.azurecr.io", "oejenkinscidockerregistry") {
             def image = docker.image(imageName)
             image.pull()
             image.inside(runArgs) {
                 dir("${WORKSPACE}/build") {
-                    Run(compiler, task)
+                    Run(compiler, task, "", os)
                 }
             }
         }
@@ -51,18 +51,22 @@ def azureEnvironment(String task, String imageName = "oetools-deploy:latest") {
     }
 }
 
-def runTask(String task) {
+def runTask(String task, String os) {
     dir("${WORKSPACE}/build") {
-        sh """#!/usr/bin/env bash
-                set -o errexit
-                set -o pipefail
-                source /etc/profile
-                ${task}
-            """
+        if (os == "ubuntu") {
+            sh """#!/usr/bin/env bash
+                    set -o errexit
+                    set -o pipefail
+                    source /etc/profile
+                    ${task}
+                """
+        } else if (os == "windows") {
+            bat "${task}"
+        }
     }
 }
 
-def Run(String compiler, String task, String compiler_version = "") {
+def Run(String compiler, String task, String compiler_version = "", String os = "ubuntu") {
     def c_compiler
     def cpp_compiler
     switch(compiler) {
@@ -92,7 +96,7 @@ def Run(String compiler, String task, String compiler_version = "") {
         cpp_compiler += "-${compiler_version}"
     }
     withEnv(["CC=${c_compiler}","CXX=${cpp_compiler}"]) {
-        runTask(task);
+        runTask(task, os);
     }
 }
 
@@ -127,31 +131,45 @@ def emailJobStatus(String status) {
  * Compile open-enclave on Windows platform, generate NuGet package out of it, 
  * install the generated NuGet package, and run samples tests against the installation.
  */
+def windowsCompilePackageCommands(String buildType, String hasQuoteProvider, Integer timeoutSeconds, String lviMitigation = 'None', String lviMitigationSkipTests = 'ON', List extra_cmake_args = []) {
+    def commands =  """
+        vcvars64.bat x64 && \
+        cmake.exe ${WORKSPACE} -G Ninja -DCMAKE_BUILD_TYPE=${buildType} -DBUILD_ENCLAVES=ON -DHAS_QUOTE_PROVIDER=${hasQuoteProvider} -DLVI_MITIGATION=${lviMitigation} -DLVI_MITIGATION_SKIP_TESTS=${lviMitigationSkipTests} -DNUGET_PACKAGE_PATH=C:/oe_prereqs -DCPACK_GENERATOR=NuGet -Wdev ${extra_cmake_args.join(' ')} && \
+        ninja.exe && \
+        ctest.exe -V -C ${buildType} --timeout ${timeoutSeconds} && \
+        cpack.exe -D CPACK_NUGET_COMPONENT_INSTALL=ON -DCPACK_COMPONENTS_ALL=OEHOSTVERIFY && \
+        cpack.exe && \
+        (if exist C:\\oe rmdir /s/q C:\\oe) && \
+        nuget.exe install open-enclave -Source %cd% -OutputDirectory C:\\oe -ExcludeVersion && \
+        set CMAKE_PREFIX_PATH=C:\\oe\\open-enclave\\openenclave\\lib\\openenclave\\cmake && \
+        cd C:\\oe\\open-enclave\\openenclave\\share\\openenclave\\samples && \
+        setlocal enabledelayedexpansion && \
+        for /d %%i in (*) do (
+            cd C:\\oe\\open-enclave\\openenclave\\share\\openenclave\\samples\\"%%i"
+            mkdir build
+            cd build
+            cmake .. -G Ninja -DNUGET_PACKAGE_PATH=C:\\oe_prereqs -DLVI_MITIGATION=${lviMitigation} || exit /b %errorlevel%
+            ninja || exit /b %errorlevel%
+            ninja run || exit /b %errorlevel%
+        )
+        """
+    return commands
+}
+
+def WinCompilePackageContainerTest(String dockerTag, String compiler,String dirName, String buildType, String hasQuoteProvider, Integer timeoutSeconds, String lviMitigation = 'None', String lviMitigationSkipTests = 'ON', List extra_cmake_args = []) {
+    cleanWs()
+    checkout scm
+    dir(dirName) {
+        def task = windowsCompilePackageCommands(buildType, hasQuoteProvider, timeoutSeconds, lviMitigation, lviMitigationSkipTests, extra_cmake_args)
+        ContainerRun("oetools-ws2019:${dockerTag}",compiler, task, "", "windows")
+    }
+}
+
 def WinCompilePackageTest(String dirName, String buildType, String hasQuoteProvider, Integer timeoutSeconds, String lviMitigation = 'None', String lviMitigationSkipTests = 'ON', List extra_cmake_args = []) {
     cleanWs()
     checkout scm
     dir(dirName) {
-        bat """
-            vcvars64.bat x64 && \
-            cmake.exe ${WORKSPACE} -G Ninja -DCMAKE_BUILD_TYPE=${buildType} -DBUILD_ENCLAVES=ON -DHAS_QUOTE_PROVIDER=${hasQuoteProvider} -DLVI_MITIGATION=${lviMitigation} -DLVI_MITIGATION_SKIP_TESTS=${lviMitigationSkipTests} -DNUGET_PACKAGE_PATH=C:/oe_prereqs -DCPACK_GENERATOR=NuGet -Wdev ${extra_cmake_args.join(' ')} && \
-            ninja.exe && \
-            ctest.exe -V -C ${buildType} --timeout ${timeoutSeconds} && \
-            cpack.exe -D CPACK_NUGET_COMPONENT_INSTALL=ON -DCPACK_COMPONENTS_ALL=OEHOSTVERIFY && \
-            cpack.exe && \
-            (if exist C:\\oe rmdir /s/q C:\\oe) && \
-            nuget.exe install open-enclave -Source %cd% -OutputDirectory C:\\oe -ExcludeVersion && \
-            set CMAKE_PREFIX_PATH=C:\\oe\\open-enclave\\openenclave\\lib\\openenclave\\cmake && \
-            cd C:\\oe\\open-enclave\\openenclave\\share\\openenclave\\samples && \
-            setlocal enabledelayedexpansion && \
-            for /d %%i in (*) do (
-                cd C:\\oe\\open-enclave\\openenclave\\share\\openenclave\\samples\\"%%i"
-                mkdir build
-                cd build
-                cmake .. -G Ninja -DNUGET_PACKAGE_PATH=C:\\oe_prereqs -DLVI_MITIGATION=${lviMitigation} || exit /b %errorlevel%
-                ninja || exit /b %errorlevel%
-                ninja run || exit /b %errorlevel%
-            )
-            """
+        bat windowsCompilePackageCommands(buildType, hasQuoteProvider, timeoutSeconds, lviMitigation, lviMitigationSkipTests, extra_cmake_args)
     }
 }
 
