@@ -65,12 +65,23 @@ def runTask(String task) {
 def Run(String compiler, String task, String compiler_version = "") {
     def c_compiler
     def cpp_compiler
+
+    compiler_components = compiler.split("-")
+    if (compiler_components[0] == "clang" && compiler_components.size() > 1) {
+        compiler = "clang"
+        compiler_version = compiler_components[1]
+    }
+
     switch(compiler) {
         case "cross":
             // In this case, the compiler is set by the CMake toolchain file. As
             // such, it is not necessary to specify anything in the environment.
             runTask(task)
             return
+        case "clang":
+            c_compiler = "clang"
+            cpp_compiler = "clang++"
+            break
         case "clang-7":
             c_compiler = "clang"
             cpp_compiler = "clang++"
