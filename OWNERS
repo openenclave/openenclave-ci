@@ -1,8 +1,10 @@
 approvers:
   - BRMcLaren
+  - CyanDevs
   - rs--
 reviewers:
   - BRMcLaren
+  - CyanDevs
   - rs--
   - oe-ci-robot
 labels:
