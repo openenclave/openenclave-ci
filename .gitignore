@@ -1,0 +1,8 @@
+.terraform
+*.tfstate
+planfile
+aks-engine-template.json
+_output
+translations
+.env
+.DS_Store
