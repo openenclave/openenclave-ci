@@ -1,0 +1,13 @@
+diff --git a/include/plat/arm/common/arm_def.h b/include/plat/arm/common/arm_def.h
+index 4e9c70aa1..e3fee9b26 100644
+--- a/include/plat/arm/common/arm_def.h
++++ b/include/plat/arm/common/arm_def.h
+@@ -69,7 +69,7 @@
+  *   - SCP TZC DRAM: If present, DRAM reserved for SCP use
+  *   - AP TZC DRAM: The remaining TZC secured DRAM reserved for AP use
+  */
+-#define ARM_TZC_DRAM1_SIZE		UL(0x01000000)
++#define ARM_TZC_DRAM1_SIZE		UL(0x02000000)
+ 
+ #define ARM_SCP_TZC_DRAM1_BASE		(ARM_DRAM1_BASE +		\
+ 					 ARM_DRAM1_SIZE -		\

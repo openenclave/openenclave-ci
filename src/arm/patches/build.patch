@@ -1,0 +1,44 @@
+diff --git a/common.mk b/common.mk
+index 8aac6a7..0c579db 100644
+--- a/common.mk
++++ b/common.mk
+@@ -243,6 +243,10 @@ endif
+ 	@echo "BR2_PACKAGE_OPENSSL=y" >> ../out-br/extra.conf
+ 	@echo "BR2_PACKAGE_LIBOPENSSL=y" >> ../out-br/extra.conf
+ 	@echo "BR2_PACKAGE_MMC_UTILS=y" >> ../out-br/extra.conf
++	@echo "BR2_PACKAGE_CMAKE_CTEST=y" >> ../out-br/extra.conf
++	@echo "BR2_TARGET_ENABLE_ROOT_LOGIN=y" >> ../out-br/extra.conf
++	@echo "BR2_PACKAGE_DROPBEAR=y" >> ../out-br/extra.conf
++	@echo "BR2_ROOTFS_USERS_TABLES=\"../build/br-ext/configs/users\"" >> ../out-br/extra.conf
+ 	@(cd .. && python build/br-ext/scripts/make_def_config.py \
+ 		--br buildroot --out out-br --br-ext build/br-ext \
+ 		--top-dir "$(ROOT)" \
+diff --git a/qemu_v8.mk b/qemu_v8.mk
+index bf86ea2..9693f99 100644
+--- a/qemu_v8.mk
++++ b/qemu_v8.mk
+@@ -161,24 +161,6 @@ QEMU_SMP ?= 2
+ .PHONY: run-only
+ run-only:
+ 	ln -sf $(ROOT)/out-br/images/rootfs.cpio.gz $(BINARIES_PATH)/
+-	$(call check-terminal)
+-	$(call run-help)
+-	$(call launch-terminal,54320,"Normal World")
+-	$(call launch-terminal,54321,"Secure World")
+-	$(call wait-for-ports,54320,54321)
+-	cd $(BINARIES_PATH) && $(QEMU_PATH)/aarch64-softmmu/qemu-system-aarch64 \
+-		-nographic \
+-		-serial tcp:localhost:54320 -serial tcp:localhost:54321 \
+-		-smp $(QEMU_SMP) \
+-		-s -S -machine virt,secure=on -cpu cortex-a57 \
+-		-d unimp -semihosting-config enable,target=native \
+-		-m 1057 \
+-		-bios bl1.bin \
+-		-initrd rootfs.cpio.gz \
+-		-kernel Image -no-acpi \
+-		-append 'console=ttyAMA0,38400 keep_bootcon root=/dev/vda2' \
+-		-virtfs local,id=sh0,path=$(HOME),security_model=passthrough,readonly,mount_tag=sh0 \
+-		$(QEMU_EXTRA_ARGS)
+ 
+ ifneq ($(filter check,$(MAKECMDGOALS)),)
+ CHECK_DEPS := all
